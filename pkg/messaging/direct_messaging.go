@@ -15,6 +15,7 @@ package messaging
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"strings"
 	"time"
@@ -110,6 +111,11 @@ func NewDirectMessaging(
 
 // Invoke takes a message requests and invokes an app, either local or remote.
 func (d *directMessaging) Invoke(ctx context.Context, targetAppID string, req *invokev1.InvokeMethodRequest) (*invokev1.InvokeMethodResponse, error) {
+	keys := req.Metadata()[nr.ConsistentHashKey].GetValues()
+	if len(keys) > 0 {
+		targetAppID = fmt.Sprintf("%s-%s", targetAppID, keys[0])
+	}
+
 	app, err := d.getRemoteApp(targetAppID)
 	if err != nil {
 		return nil, err
@@ -244,12 +250,16 @@ func (d *directMessaging) addForwardedHeadersToMetadata(req *invokev1.InvokeMeth
 }
 
 func (d *directMessaging) getRemoteApp(appID string) (remoteApp, error) {
-	id, namespace, err := d.requestAppIDAndNamespace(appID)
+	argsItems := strings.Split(appID, "-")
+	id, namespace, err := d.requestAppIDAndNamespace(argsItems[0])
 	if err != nil {
 		return remoteApp{}, err
 	}
+	request := nr.ResolveRequest{ID: id, Namespace: namespace, Port: d.grpcPort, Data: map[string]string{}}
+	if len(argsItems) >= 2{
+		request.Data[nr.ConsistentHashKey] = argsItems[1]
+	}
 
-	request := nr.ResolveRequest{ID: id, Namespace: namespace, Port: d.grpcPort}
 	address, err := d.resolver.ResolveID(request)
 	if err != nil {
 		return remoteApp{}, err

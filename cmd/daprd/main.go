@@ -87,7 +87,8 @@ import (
 	nr "github.com/dapr/components-contrib/nameresolution"
 	nr_consul "github.com/dapr/components-contrib/nameresolution/consul"
 	nr_kubernetes "github.com/dapr/components-contrib/nameresolution/kubernetes"
-	nr_mdns "github.com/dapr/components-contrib/nameresolution/mdns"
+	//nr_mdns "github.com/dapr/components-contrib/nameresolution/mdns"
+	nr_mdns "github.com/dapr/components-contrib/nameresolution/mdns2"//zarba
 
 	nr_loader "github.com/dapr/dapr/pkg/components/nameresolution"
 
